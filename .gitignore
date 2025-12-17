@@ -1,0 +1,13 @@
+# JetBrains IDE files
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Java
+*.class
+
+# OS junk
+.DS_Store
+Thumbs.db
