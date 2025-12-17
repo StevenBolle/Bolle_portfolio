@@ -9,7 +9,7 @@ focusing on algorithms, data structures, and applied AI.
 ### AVL Tree Map
 Self-balancing binary search tree with insertion, deletion, and tree visualization.
 
--> [View project](java/assignment5_problem_4_avl) 
+-> [View project](java/assignment5_problem_4_avl_tree/src/main/java/retargeted/assignment5_problem_4_avl_tree) 
 
 ### Enigma Machine Simulator
 Python  
