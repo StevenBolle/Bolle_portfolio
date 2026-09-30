@@ -1,8 +1,10 @@
 # AI Chiptune Generator
 
 An AI-assisted music generation application that uses a Long Short-Term Memory (LSTM) neural network to generate original chiptune-style melodies and combines them with rule-based musical arrangement to produce complete multi-track MIDI compositions.
-The project includes a Flask web application that allows users to configure musical properties such as style, key, chord progression, tempo, track length, and generation temperature. Generated tracks can be synthesized and played directly in the browser, visualized through a CRT-inspired waveform display, and saved as MIDI files.
-This project was originally developed for an introductory Artificial Intelligence course and was later reorganized and refined for inclusion in my software development portfolio.
+The project includes a Flask web application that allows users to configure musical properties such as style, key, chord progression, tempo, track length, and generation temperature. Generated tracks can be synthesized and played directly in the browser, visualized through a CRT-inspired waveform display, and saved as MIDI files. This project was designed by me as the final project for a senior level Artificial Intelligence course. There was no rubric, just a directive: utilize AI in an interesting way.
+
+<img width="1905" height="966" alt="image" src="https://github.com/user-attachments/assets/1ccd92a9-6ff7-4c4a-820a-3a3f2e21b1a2" />
+
 
 ## Demo
 
