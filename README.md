@@ -1,10 +1,15 @@
 # Steven Bolle
-# Computer Information Sciences - BS student at University of Michigan - Dearborn
+# Computer Information Sciences - BS senior at University of Michigan - Dearborn
 
 This repository contains selected academic and personal projects in computer science,
 focusing on algorithms, data structures, and applied AI.
 
 -- FEATURED PROJECTS --
+
+### AI Chiptune Generator Web App
+LSTM model trained with synthetic data that generates synth music. Within web app, select different setting styles, chord progressions, BPM, stereo output, and AI temperature to create music.
+
+-> [View Project](python/AI_chiptune_generator/)
 
 ### AVL Tree Map
 Self-balancing binary search tree with insertion, deletion, and tree visualization.
@@ -16,7 +21,6 @@ Python
 Simulation of the WWII Enigma cipher with fully configurable rotors and plugboard, including encryption/decryption testing.
 
 -> [View project](/python/Project3_EnigmaMachine)
-
 
 
 ## Additional Coursework Projects
