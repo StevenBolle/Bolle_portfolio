@@ -8,7 +8,10 @@ The project includes a Flask web application that allows users to configure musi
 
 ## Demo
 
-<!-- Add a screenshot, animated GIF, or YouTube demonstration here. -->
+[![AI Chiptune Generator Demo](https://img.youtube.com/vi/mMm6qYMeSK8/maxresdefault.jpg)](https://www.youtube.com/watch?v=mMm6qYMeSK8)
+
+**[Watch the AI Chiptune Generator demonstration on YouTube](https://www.youtube.com/watch?v=mMm6qYMeSK8)**
+
 The web interface provides controls for configuring a composition, generating a new track, listening to the result, and viewing information about the generated composition.
 
 ## Features
