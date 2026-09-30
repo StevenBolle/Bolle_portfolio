@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chiptune Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --crt-green: #00ff88;
+      --crt-dark: #020508;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 16px;
+      background:
+        radial-gradient(circle at top, #1b2735 0, #090a0f 50%, #000000 100%);
+      color: var(--crt-green);
+      font-family: "Courier New", monospace;
+      text-shadow: 0 0 4px rgba(0, 255, 136, 0.6);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+      text-align: center;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* === CONTROL PANEL === */
+    .control-panel {
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(0, 255, 136, 0.4);
+      box-shadow:
+        0 0 20px rgba(0, 255, 136, 0.15),
+        inset 0 0 12px rgba(0, 255, 136, 0.08);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: flex-end;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 140px;
+      flex: 1 1 140px;
+    }
+
+    .control-panel label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.9;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    select,
+    button,
+    input[type="text"],
+    input[type="number"] {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 136, 0.7);
+      background: rgba(0, 0, 0, 0.8);
+      color: var(--crt-green);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      text-shadow: inherit;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.35);
+    }
+
+    select:hover,
+    button:hover,
+    input[type="text"]:hover,
+    input[type="number"]:hover {
+      background: rgba(0, 255, 136, 0.12);
+      transform: translateY(-1px);
+      box-shadow: 0 0 14px rgba(0, 255, 136, 0.55);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+    }
+
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .buttons-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .generate-btn {
+      background: #00c96b;
+      color: #021109;
+      font-weight: bold;
+    }
+
+    .listen-btn {
+      background: transparent;
+    }
+
+    .generated-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    /* === AUDIO PLAYER STRIP === */
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 255, 136, 0.4);
+      box-shadow:
+        0 0 16px rgba(0, 255, 136, 0.2),
+        inset 0 0 8px rgba(0, 255, 136, 0.12);
+    }
+
+    audio {
+      width: 100%;
+      max-width: 100%;
+      filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.6));
+    }
+
+    .status-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #ff3b3b 0, #8b1111 60%, #200000 100%);
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+      flex-shrink: 0;
+    }
+
+    .status-light.playing {
+      background: radial-gradient(circle, #00ff88 0, #048b46 60%, #002013 100%);
+      box-shadow: 0 0 12px rgba(0, 255, 136, 0.9);
+    }
+
+    .status-label {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* === CRT VISUALIZER === */
+    .crt-shell {
+      border-radius: 18px;
+      padding: 16px;
+      background: radial-gradient(circle at top, #1b2024 0, #050506 40%, #000000 100%);
+      border: 2px solid rgba(0, 255, 136, 0.4);
+      box-shadow:
+        0 0 32px rgba(0, 255, 136, 0.3),
+        0 0 120px rgba(0, 255, 136, 0.18),
+        inset 0 0 24px rgba(0, 255, 136, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .crt-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 0.85;
+    }
+
+    .crt-badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 255, 136, 0.6);
+      background: rgba(0, 0, 0, 0.8);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .crt-screen {
+      border-radius: 12px;
+      background: #000000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas#crt-visualizer {
+      width: 100%;
+      height: 260px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .crt-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 30% 0%, rgba(255, 255, 255, 0.16), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.5;
+    }
+
+    .crt-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.1) 0,
+        rgba(0, 0, 0, 0) 30%,
+        rgba(0, 0, 0, 0) 70%,
+        rgba(255, 255, 255, 0.06) 100%
+      );
+      mix-blend-mode: screen;
+      opacity: 0.5;
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    /* === COMPOSER LOG === */
+    .log-panel {
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+      box-shadow:
+        0 0 18px rgba(0, 255, 136, 0.18),
+        inset 0 0 10px rgba(0, 255, 136, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-header {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    #composer-log {
+      width: 100%;
+      min-height: 180px;
+      max-height: 320px;
+      resize: vertical;
+      background: rgba(0, 0, 0, 0.9);
+      color: var(--crt-green);
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 136, 0.6);
+      padding: 8px 10px;
+      font-family: "Courier New", monospace;
+      font-size: 0.8rem;
+      outline: none;
+      box-shadow: inset 0 0 8px rgba(0, 255, 136, 0.25);
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 640px) {
+      .control-panel {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .player-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .status-label {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script src="https://unpkg.com/tone@15.1.22/build/Tone.js"></script>
+  <script src="https://unpkg.com/@tonejs/midi@2.0.28/build/Midi.js"></script>
+
+</head>
+<body>
+  <h1>Chiptune Generator</h1>
+  <div class="subtitle">
+    Pick a style, console, key, and progression — then generate and listen to a fresh track.
+  </div>
+
+  <div class="app-shell">
+    <!-- CONTROL PANEL -->
+    <div class="control-panel">
+      <div class="control-group">
+        <label for="title-input">Track Title</label>
+        <input id="title-input" type="text" placeholder="beary" />
+      </div>
+
+      <div class="control-group">
+        <label for="style-select">Style</label>
+        <select id="style-select">
+          <option value="overworld">Overworld</option>
+          <option value="battle">Battle</option>
+          <option value="dungeon">Dungeon</option>
+          <option value="town">Town</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="console-select">Console</label>
+        <select id="console-select">
+          <option value="nes">NES</option>
+          <option value="snes">SNES</option>
+          <option value="genesis">Genesis</option>
+          <option value="gameboy">Game Boy</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="key-select">Key</label>
+        <!-- values match MAJOR_SCALES / MINOR_SCALES in chiptune_core.py -->
+        <select id="key-select">
+          <option value="C">C major</option>
+          <option value="F">F major</option>
+          <option value="G">G major</option>
+          <option value="D">D major</option>
+          <option value="Am">A minor</option>
+          <option value="Dm">D minor</option>
+          <option value="Em">E minor</option>
+          <option value="Gm">G minor</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="progression-select">Progression</label>
+        <!-- values match PROGRESSIONS keys -->
+        <select id="progression-select">
+          <option value="POP">POP (I–V–vi–IV)</option>
+          <option value="POP2">POP2 (vi–IV–I–V)</option>
+          <option value="LOOP">LOOP (I–IV–V–IV)</option>
+          <option value="LOOP2">LOOP2 (I–V–I–IV)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="speaker-select">Speaker Mode</label>
+        <select id="speaker-select">
+          <option value="stereo">Stereo</option>
+          <option value="mono_crt">Mono CRT</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="bars-input">Bars</label>
+        <input id="bars-input" type="number" min="1" max="16" value="16" />
+      </div>
+
+      <div class="control-group">
+        <label for="tempo-input">Tempo (BPM)</label>
+        <input id="tempo-input" type="number" min="40" max="220" value="120" />
+      </div>
+
+      <div class="control-group">
+        <label for="temperature-input">Temperature</label>
+        <input id="temperature-input" type="number" step="0.1" min="0.1" max="3.0" value="1.0" />
+      </div>
+
+      <div class="control-group" style="flex: 1 1 180px;">
+        <label>&nbsp;</label>
+        <div class="buttons-group">
+          <button id="generate-btn" class="generate-btn">Generate</button>
+          <button id="listen-btn" class="listen-btn" disabled>Listen</button>
+          <span id="generated-label" class="generated-label">Generated: —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIO PLAYER ROW -->
+    <div class="player-row">
+      <div class="status-light" id="status-light"></div>
+      <div class="status-label" id="status-label">Idle · No audio loaded</div>
+      <audio id="audio-player" controls preload="auto" style="display: none;">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+
+    <!-- CRT VISUALIZER -->
+    <div class="crt-shell">
+      <div class="crt-label-row">
+        <span>Spectrum Monitor · Channel A</span>
+        <span class="crt-badge">Waveform · CRT Mode</span>
+      </div>
+      <div class="crt-screen">
+        <canvas id="crt-visualizer" width="640" height="260"></canvas>
+      </div>
+      <div class="hint">
+        Press Generate, then Listen (or Play) to wake the visualizer. AudioContext starts on user gesture.
+      </div>
+    </div>
+
+    <!-- COMPOSER LOG -->
+    <div class="log-panel">
+      <div class="log-header">Composer Log</div>
+      <textarea id="composer-log" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    const generateBtn = document.getElementById("generate-btn");
+    const listenBtn = document.getElementById("listen-btn");
+    const statusLabel = document.getElementById("status-label");
+    const generatedLabel = document.getElementById("generated-label");
+    const audioPlayer = document.getElementById("audio-player");
+    const composerLog = document.getElementById("composer-log");
+
+    let lastAudioUrl = null;
+    let lastMidiUrl = null;
+    let activeMidiSynth = null;
+    let midiStopTimer = null;
+    let midiIsPlaying = false;
+
+    // -----------------------------
+    // GENERATE HANDLER → /generate
+    // -----------------------------
+    generateBtn.addEventListener("click", async () => {
+      const title = (document.getElementById("title-input").value || "").trim();
+      const style = document.getElementById("style-select").value;
+      const consoleName = document.getElementById("console-select").value;
+      const keyName = document.getElementById("key-select").value;
+      const progressionName = document.getElementById("progression-select").value;
+      const speakerMode = document.getElementById("speaker-select").value;
+
+      const bars = parseInt(document.getElementById("bars-input").value || "8", 10);
+      const tempoBpm = parseInt(document.getElementById("tempo-input").value || "120", 10);
+      const temperature = parseFloat(document.getElementById("temperature-input").value || "1.1");
+
+      generateBtn.disabled = true;
+      listenBtn.disabled = true;
+      statusLabel.textContent = `Generating ${bars}-bar ${style} track on ${consoleName.toUpperCase()}...`;
+      composerLog.value = "";
+
+      try {
+        const res = await fetch("/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            style,
+            console: consoleName,
+            speaker_mode: speakerMode,
+            bars,
+            tempo_bpm: tempoBpm,
+            temperature,
+            key_name: keyName,
+            progression_name: progressionName,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (data.status !== "ok") {
+          throw new Error("Backend reported error.");
+        }
+
+        const effectiveTitle = data.title || title || "(untitled)";
+        generatedLabel.textContent = `Generated: ${effectiveTitle}`;
+        lastMidiUrl = data.midi_url || null;
+
+        if (data.log_text) {
+          composerLog.value = data.log_text;
+        } else {
+          composerLog.value = "(No composer log returned.)";
+        }
+
+        if (data.audio_url) {
+          lastAudioUrl = data.audio_url;
+          audioPlayer.src = data.audio_url;
+          listenBtn.disabled = false;
+
+          audioPlayer.play().catch(err => {
+            console.warn("Autoplay failed, user may need to press play:", err);
+          });
+
+          statusLabel.textContent = `Ready · Now playing "${effectiveTitle}"`;
+        } else {
+          // No audio URL (e.g., fluidsynth/ffmpeg failed) – still show MIDI/log.
+          lastAudioUrl = null;
+          if (lastMidiUrl) {
+            listenBtn.disabled = false;
+            statusLabel.textContent = "Ready. Midi generated. Press Listen to play in browser"
+          } else {
+            listenBtn.disabled = true;
+            statusLabel.textContent = "Generation completed. No playable output returned."
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        statusLabel.textContent = "Error generating track. See console/server logs.";
+        composerLog.value = composerLog.value || "(Error — see browser console and server logs.)";
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+
+    async function playMidiInBrowser(midiUrl) {
+      await Tone.start();
+
+      const midi = await Midi.fromUrl(midiUrl);
+
+      // Stop and dispose any previous MIDI playback.
+      if (activeMidiSynth) {
+        activeMidiSynth.releaseAll();
+        activeMidiSynth.dispose();
+      }
+
+      if (midiStopTimer) {
+        clearTimeout(midiStopTimer);
+      }
+
+      const synth = new Tone.PolySynth(Tone.Synth);
+      const toneAnalyser = new Tone.Analyser("waveform", 1024);
+
+      synth.connect(toneAnalyser);
+      synth.toDestination();
+
+      activeMidiSynth = synth;
+      window.midiToneAnalyser = toneAnalyser;
+      midiIsPlaying = true;
+
+      const now = Tone.now() + 0.1;
+
+      midi.tracks.forEach(track => {
+        track.notes.forEach(note => {
+          synth.triggerAttackRelease(
+            note.name,
+            note.duration,
+            now + note.time,
+            note.velocity
+          );
+        });
+      });
+
+      setPlayingState(true);
+      resizeCanvasToDisplaySize();
+
+      if (!animationId) {
+        drawCRTWaveform();
+      }
+
+      listenBtn.textContent = "Stop";
+      audioPlayer.style.display = "none";
+      statusLabel.textContent = "Playing generated MIDI in browser...";
+
+      // Automatically reset the UI when the MIDI reaches its end.
+      const durationMs = (midi.duration + 0.25) * 1000;
+
+      midiStopTimer = setTimeout(() => {
+        midiIsPlaying = false;
+
+        if (activeMidiSynth) {
+          activeMidiSynth.releaseAll();
+          activeMidiSynth.dispose();
+          activeMidiSynth = null;
+        }
+
+        window.midiToneAnalyser = null;
+
+        stopVisualizerIfNeeded();
+
+        listenBtn.textContent = "Listen";
+        statusLabel.textContent = "Stopped · Track finished.";
+
+        midiStopTimer = null;
+      }, durationMs);
+    }
+
+    // -----------------------------
+    // LISTEN BUTTON (re-play last track)
+    // -----------------------------
+    listenBtn.addEventListener("click", async () => {
+      // MIDI is currently playing: treat this click as Stop.
+      if (midiIsPlaying) {
+        midiIsPlaying = false;
+
+        if (midiStopTimer) {
+          clearTimeout(midiStopTimer);
+          midiStopTimer = null;
+        }
+
+        if (activeMidiSynth) {
+          activeMidiSynth.releaseAll();
+          activeMidiSynth.dispose();
+          activeMidiSynth = null;
+        }
+
+        window.midiToneAnalyser = null;
+
+        stopVisualizerIfNeeded();
+
+        listenBtn.textContent = "Listen";
+        statusLabel.textContent = "Stopped · Playback stopped.";
+
+        return;
+      }
+
+      // Rendered WAV/MP3 is available: use the original audio player.
+      if (lastAudioUrl) {
+        // audioPlayer.style.display = "";
+
+        if (audioPlayer.src !== lastAudioUrl) {
+          audioPlayer.src = lastAudioUrl;
+        }
+
+        audioPlayer.play().catch(err => {
+          console.warn("Audio playback failed:", err);
+        });
+
+        return;
+      }
+
+      // No rendered audio: play the generated MIDI through Tone.js.
+      if (lastMidiUrl) {
+        try {
+          await playMidiInBrowser(lastMidiUrl);
+        } catch (err) {
+          console.error("MIDI playback failed:", err);
+          midiIsPlaying = false;
+          listenBtn.textContent = "Listen";
+          statusLabel.textContent = "MIDI playback failed · see browser console.";
+        }
+      }
+    });
+
+    // -----------------------------
+    // CRT VISUALIZER
+    // -----------------------------
+    const canvas = document.getElementById("crt-visualizer");
+    const ctx = canvas.getContext("2d");
+
+    let audioCtx = null;
+    let analyser = null;
+    let sourceNode = null;
+    let dataArray = null;
+    let bufferLength = 0;
+    let animationId = null;
+
+    const statusLight = document.getElementById("status-light");
+
+    function setPlayingState(isPlaying) {
+      if (isPlaying) {
+        statusLight.classList.add("playing");
+      } else {
+        statusLight.classList.remove("playing");
+      }
+    }
+
+    function setupAudioGraph() {
+      if (audioCtx) return;
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) {
+        console.warn("Web Audio API not supported in this browser.");
+        statusLabel.textContent = "Web Audio API not supported · Visualizer disabled.";
+        return;
+      }
+
+      audioCtx = new AudioContextClass();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+      bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+
+      sourceNode = audioCtx.createMediaElementSource(audioPlayer);
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function resizeCanvasToDisplaySize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const displayWidth = Math.round(rect.width * dpr);
+      const displayHeight = Math.round(rect.height * dpr);
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawCRTWaveform() {
+      const midiAnalyser = window.midiToneAnalyser || null;
+
+      // Nothing available to visualize.
+      if (!analyser && !midiAnalyser) return;
+
+      animationId = requestAnimationFrame(drawCRTWaveform);
+
+      let waveformData;
+      let waveformLength;
+
+      if (midiAnalyser) {
+        // Tone.js MIDI playback produces floating-point samples from -1 to 1.
+        waveformData = midiAnalyser.getValue();
+        waveformLength = waveformData.length;
+      } else {
+        // Existing HTML audio player produces byte samples from 0 to 255.
+        analyser.getByteTimeDomainData(dataArray);
+        waveformData = dataArray;
+        waveformLength = bufferLength;
+      }
+
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#00ff88";
+      ctx.shadowColor = "#00ff88";
+      ctx.shadowBlur = 10;
+
+      ctx.beginPath();
+      const sliceWidth = width / waveformLength;
+
+      for (let i = 0; i < waveformLength; i++) {
+        let y;
+
+        if (midiAnalyser) {
+          // Tone.js: -1..1, with 0 at the center.
+          y = ((waveformData[i] + 1) / 2) * height;
+        } else {
+          // Original Web Audio byte data: 0..255.
+          const v = waveformData[i] / 128.0;
+          y = (v * height) / 2;
+        }
+
+        const x = i * sliceWidth;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#000000";
+
+      const scanlineSpacing = 4;
+      const scanlineThickness = 2;
+
+      for (let y = 0; y < height; y += scanlineSpacing) {
+        ctx.fillRect(0, y, width, scanlineThickness);
+      }
+
+      ctx.restore();
+
+      ctx.save();
+
+      const gradient = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        0,
+        width / 2,
+        height / 2,
+        Math.max(width, height)
+      );
+
+      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0.8)");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.restore();
+    }
+
+    audioPlayer.addEventListener("play", async () => {
+      setupAudioGraph();
+
+      if (audioCtx && audioCtx.state === "suspended") {
+        try {
+          await audioCtx.resume();
+        } catch (e) {
+          console.warn("Error resuming AudioContext:", e);
+        }
+      }
+
+      resizeCanvasToDisplaySize();
+      if (!animationId) {
+        drawCRTWaveform();
+      }
+
+      setPlayingState(true);
+      statusLabel.textContent = "Playing · Visualizer active (CRT mode).";
+    });
+
+    function stopVisualizerIfNeeded() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      setPlayingState(false);
+    }
+
+    audioPlayer.addEventListener("pause", () => {
+      stopVisualizerIfNeeded();
+      statusLabel.textContent = "Paused · Visualizer paused.";
+    });
+
+    audioPlayer.addEventListener("ended", () => {
+      stopVisualizerIfNeeded();
+      statusLabel.textContent = "Stopped · Track finished.";
+    });
+
+    window.addEventListener("resize", () => {
+      resizeCanvasToDisplaySize();
+    });
+
+    window.addEventListener("load", () => {
+      resizeCanvasToDisplaySize();
+    });
+  </script>
+</body>
+</html>
